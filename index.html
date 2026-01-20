@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YASSER TECH TV</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<!-- HLS.js for m3u8 streams -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body,html{height:100%;overflow-x:hidden;background:#000;color:#fff;}
+
+/* Background Video */
+video.bg-video{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-2;filter:brightness(0.25);}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:-1;}
+
+/* Floating sparkles */
+.sparkle{position:absolute;width:8px;height:8px;background:#ffc800;border-radius:50%;opacity:0.7;animation:float 6s linear infinite;}
+@keyframes float{0%{transform:translateY(0) scale(1);}50%{transform:translateY(-100px) scale(1.3);}100%{transform:translateY(0) scale(1);}}
+
+/* Welcome Page */
+#welcome{height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px;overflow:hidden;}
+#welcome h1{font-size:4rem;color:#ffc800;text-shadow:0 0 20px #ffcc00;animation:pulse 2s infinite alternate;}
+@keyframes pulse{0%{color:#ffc800;}50%{color:#fff;}100%{color:#ffc800;}}
+#welcome p{font-size:1.3rem;margin:20px 0;opacity:0.9;animation:bounce 2s infinite alternate;}
+@keyframes bounce{0%{transform:translateY(0);}50%{transform:translateY(-10px);}100%{transform:translateY(0);}}
+#welcome button{padding:15px 35px;font-size:1.2rem;border:none;border-radius:30px;background:#ffc800;color:#000;cursor:pointer;font-weight:bold;transition:0.3s;animation:buttonPulse 2s infinite alternate;}
+#welcome button:hover{transform:scale(1.05);background:#ffb800;}
+@keyframes buttonPulse{0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);}}
+
+/* Main Page */
+#main{display:none;padding:20px 5%;}
+
+/* Slider */
+.slider-container{position:relative;height:60px;overflow:hidden;margin-bottom:40px;font-size:1.5rem;color:#ffc800;font-weight:bold;}
+.slider-container span{position:absolute;width:100%;animation:slideText 12s linear infinite;}
+@keyframes slideText{0%{top:100%;}10%{top:0;}30%{top:0;}40%{top:-100%;}100%{top:-100%;}}
+
+/* Search */
+.search-box{display:flex;justify-content:center;max-width:600px;margin:20px auto;gap:10px;}
+.search-box input{flex:1;padding:15px;border-radius:30px 0 0 30px;border:none;outline:none;font-size:1rem;}
+.search-box button{padding:15px 20px;border:none;background:#ffc800;cursor:pointer;font-weight:bold;border-radius:0 30px 30px 0;display:flex;align-items:center;gap:5px;transition:.3s;}
+.search-box button:hover{background:#ffb800;}
+.search-box button i{font-style:normal;}
+
+/* Movies Grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;margin-bottom:50px;}
+.card{background:rgba(255,255,255,0.05);border-radius:15px;overflow:hidden;transition:.3s;}
+.card:hover{transform:translateY(-5px) scale(1.03);box-shadow:0 0 20px #ffcc00;}
+.card img{width:100%;height:270px;object-fit:cover;}
+.card .info{padding:10px;}
+.card .info h4{font-size:1rem;}
+.card .info small{opacity:.7;}
+.card .info a{display:block;margin-top:10px;text-align:center;padding:8px;background:#ffc800;color:#000;border-radius:20px;text-decoration:none;font-weight:bold;}
+
+/* RT News Player */
+#rtPlayerContainer{display:none;text-align:center;margin-bottom:40px;}
+#rtPlayerContainer video{width:100%;max-width:600px;height:340px;border-radius:12px;margin-bottom:10px;}
+.back-button{padding:8px 16px;background:#ffcc00;color:#000;border:none;border-radius:8px;cursor:pointer;font-weight:bold;}
+
+/* Footer */
+footer{text-align:center;padding:30px 20px;opacity:.9;font-size:.9rem;}
+footer a{display:inline-block;margin-top:5px;background:#25D366;color:#fff;padding:10px 15px;border-radius:20px;text-decoration:none;font-weight:bold;transition:.3s;}
+footer a:hover{background:#1ebe57;}
+</style>
+</head>
+<body>
+
+<!-- Background Video -->
+<video class="bg-video" autoplay muted loop>
+  <source src="https://cdn.coverr.co/videos/coverr-watching-tv-1564/1080p.mp4" type="video/mp4">
+</video>
+<div class="overlay"></div>
+
+<!-- Welcome Page -->
+<div id="welcome">
+  <h1>YASSER TECH TV</h1>
+  <p>Watch Latest Movies & TV Shows • Trending • Official Streams</p>
+  <button onclick="startApp()">Enter Site</button>
+</div>
+
+<!-- Main Page -->
+<div id="main">
+  <div class="slider-container">
+    <span id="sliderText">Welcome to YASSER TECH TV • Latest Movies 2026 • Trending TV Shows • Official Platforms</span>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search movie or TV show...">
+    <button onclick="searchMovie()"><i>🔍</i> Search</button>
+  </div>
+
+  <div id="loading" style="text-align:center; display:none; margin-bottom:20px;">Searching...</div>
+
+  <h2>Latest Movies & TV Shows</h2>
+  <div class="grid" id="moviesGrid"></div>
+
+  <h2>News Channel</h2>
+  <div style="text-align:center; margin-bottom:40px;">
+    <button onclick="playRTNews()" style="padding:15px 30px; font-size:1.2rem; border:none; border-radius:30px; background:#ffc800; color:#000; font-weight:bold; cursor:pointer; transition:.3s;">
+      RT News Live
+    </button>
+  </div>
+
+  <!-- RT News Player -->
+  <div id="rtPlayerContainer">
+    <video id="rtVideo" controls></video>
+    <br>
+    <button class="back-button" onclick="closeRTNews()">Back</button>
+  </div>
+</div>
+
+<footer>
+© 2026 YASSER TECH SOLUTIONS <br>
+📞 Owner: +255 691 548 458 <br>
+<a href="https://whatsapp.com/channel/0029Vb7BkaP7dmeg0yZiCS1I" target="_blank">Join WhatsApp Channel</a>
+</footer>
+
+<script>
+const API_KEY = "f6b681ff";
+
+// Start App
+function startApp(){
+  document.getElementById('welcome').style.display='none';
+  document.getElementById('main').style.display='block';
+  loadLatestMovies();
+  createSparkles();
+}
+
+// Floating sparkles
+function createSparkles(){
+  const welcomeDiv = document.getElementById('welcome');
+  for(let i=0;i<30;i++){
+    const sparkle = document.createElement('div');
+    sparkle.className='sparkle';
+    sparkle.style.left=Math.random()*100+'%';
+    sparkle.style.top=Math.random()*100+'%';
+    sparkle.style.animationDuration=(2+Math.random()*4)+'s';
+    sparkle.style.width=(5+Math.random()*5)+'px';
+    sparkle.style.height=(5+Math.random()*5)+'px';
+    welcomeDiv.appendChild(sparkle);
+  }
+}
+
+// Slider messages rotation
+const sliderMessages = [
+  "Welcome to YASSER TECH TV",
+  "Watch Latest Movies 2026",
+  "Trending TV Shows",
+  "Official Streaming Platforms"
+];
+let sliderIndex = 0;
+function rotateSlider(){
+  document.getElementById('sliderText').innerText = sliderMessages[sliderIndex];
+  sliderIndex = (sliderIndex+1)%sliderMessages.length;
+}
+setInterval(rotateSlider,3000);
+
+// Search Movies/TV Shows
+async function searchMovie(){
+  const query = document.getElementById('searchInput').value.trim();
+  if(!query) return;
+  document.getElementById('loading').style.display='block';
+  document.getElementById('moviesGrid').innerHTML='';
+  try{
+    const resM = await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(query)}&type=movie`);
+    const dataM = await resM.json();
+    const resT = await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(query)}&type=series`);
+    const dataT = await resT.json();
+
+    document.getElementById('loading').style.display='none';
+    if(dataM.Search || dataT.Search){
+      const combined = [...(dataM.Search||[]), ...(dataT.Search||[])];
+      combined.forEach(item=>{
+        document.getElementById('moviesGrid').innerHTML += createCard(item);
+      });
+    } else{
+      document.getElementById('moviesGrid').innerHTML = "No results found.";
+    }
+  }catch(err){console.error(err);}
+}
+
+// Card HTML
+function createCard(item){
+  return `<div class="card">
+    <img src="${item.Poster!=="N/A"?item.Poster:'https://via.placeholder.com/300x450'}">
+    <div class="info">
+      <h4>${item.Title}</h4>
+      <small>${item.Year} • ${item.Type}</small>
+      <a href="https://www.google.com/search?q=watch+${encodeURIComponent(item.Title)}" target="_blank">Watch Official</a>
+    </div>
+  </div>`;
+}
+
+// Latest Movies
+const latestMovies = [
+  "Avatar: The Way of Water",
+  "Black Panther: Wakanda Forever",
+  "Everything Everywhere All at Once",
+  "Top Gun: Maverick",
+  "Doctor Strange in the Multiverse of Madness",
+  "Thor: Love and Thunder",
+  "Spider-Man: No Way Home"
+];
+
+async function loadLatestMovies(){
+  const grid = document.getElementById('moviesGrid');
+  grid.innerHTML="Loading latest movies...";
+  for(const title of latestMovies){
+    try{
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&t=${encodeURIComponent(title)}`);
+      const data = await res.json();
+      if(data.Response==="True"){
+        grid.innerHTML += createCard(data);
+      }
+    }catch(err){console.error(err);}
+  }
+}
+
+// Play RT News using HLS.js
+function playRTNews(){
+  const container = document.getElementById('rtPlayerContainer');
+  const video = document.getElementById('rtVideo');
+
+  document.getElementById('moviesGrid').style.display='none';
+
+  container.style.display='block';
+
+  const url = 'https://rtlive-hls-1.akacast.akamaized.net/hls/live/2015525/rtnews/index.m3u8';
+
+  if(Hls.isSupported()){
+    if(window.rtHls){ window.rtHls.destroy(); }
+    window.rtHls = new Hls();
+    rtHls.loadSource(url);
+    rtHls.attachMedia(video);
+    rtHls.on(Hls.Events.MANIFEST_PARSED, function() { video.play(); });
+  } else if(video.canPlayType('application/vnd.apple.mpegurl')){
+    video.src = url;
+    video.play();
+  } else {
+    alert("Browser yako hai-support RT News HLS stream.");
+  }
+}
+
+// Close RT News Player
+function closeRTNews(){
+  const container = document.getElementById('rtPlayerContainer');
+  const video = document.getElementById('rtVideo');
+  if(window.rtHls){ window.rtHls.destroy(); }
+  video.src='';
+
+  container.style.display='none';
+  document.getElementById('moviesGrid').style.display='grid';
+}
+</script>
+
+</body>
+  </html>
